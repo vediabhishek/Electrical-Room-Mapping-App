@@ -25,7 +25,34 @@ import {
   Plug2,
   Fan,
   Snowflake,
-  Sun
+  Sun,
+  Bell,
+  Smartphone,
+  Wifi,
+  Bluetooth,
+  Timer,
+  Activity,
+  Eye,
+  ShieldAlert,
+  ShieldCheck,
+  Shield,
+  Tv,
+  Phone,
+  Network,
+  Monitor,
+  Speaker,
+  Square,
+  Moon,
+  Key,
+  AlertTriangle,
+  Usb,
+  Plug,
+  Thermometer,
+  Droplets,
+  Lightbulb,
+  MousePointer2,
+  Dices,
+  Info
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { clsx, type ClassValue } from "clsx";
@@ -39,31 +66,96 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const COMPONENT_TYPES = [
-  { id: "switch", label: "Switch", icon: ToggleRight },
-  { id: "socket", label: "Socket", icon: Plug2 },
-  { id: "fan_regulator", label: "Fan Regulator", icon: Fan },
-  { id: "ac_switch", label: "AC Switch", icon: Snowflake },
-  { id: "smart_button", label: "Smart Button", icon: Cpu },
-  { id: "dimmer", label: "Dimmer", icon: Sun },
+  // Switches
+  { id: "1_way_switch", label: "1-Way Switch", icon: ToggleRight, category: "Switches" },
+  { id: "2_way_switch", label: "2-Way Switch", icon: ToggleRight, category: "Switches" },
+  { id: "intermediate_switch", label: "Intermediate Switch", icon: ToggleRight, category: "Switches" },
+  { id: "bell_push_switch", label: "Bell Push Switch", icon: Bell, category: "Switches" },
+  { id: "dp_switch", label: "Double Pole (DP) Switch", icon: Power, category: "Switches" },
+  { id: "smart_touch_switch", label: "Smart Touch Switch", icon: MousePointer2, category: "Switches" },
+  { id: "dimmer_switch", label: "Dimmer Switch", icon: Sun, category: "Switches" },
+  { id: "ac_switch", label: "AC Switch", icon: Snowflake, category: "Switches" },
+  { id: "geyser_switch", label: "Geyser Switch", icon: Droplets, category: "Switches" },
+  { id: "exhaust_fan_switch", label: "Exhaust Fan Switch", icon: Wind, category: "Switches" },
+  { id: "water_pump_switch", label: "Water Pump Switch", icon: Droplets, category: "Switches" },
+  { id: "door_bell_switch", label: "Door Bell Switch", icon: Bell, category: "Switches" },
+  { id: "timer_switch", label: "Timer Switch", icon: Timer, category: "Switches" },
+  { id: "emergency_switch", label: "Emergency Switch", icon: AlertTriangle, category: "Switches" },
+  { id: "voltage_stabilizer_switch", label: "Voltage Stabilizer Switch", icon: Zap, category: "Switches" },
+  { id: "keycard_switch", label: "Keycard Switch", icon: Key, category: "Switches" },
+
+  // Regulators
+  { id: "fan_regulator", label: "Fan Regulator", icon: Fan, category: "Regulators" },
+  { id: "step_fan_regulator", label: "Step Fan Regulator", icon: Fan, category: "Regulators" },
+  { id: "electronic_fan_regulator", label: "Electronic Fan Regulator", icon: Fan, category: "Regulators" },
+  { id: "dimmer_fan_regulator", label: "Dimmer with Fan Regulator", icon: Dices, category: "Regulators" },
+
+  // Sockets
+  { id: "2_pin_socket", label: "2-Pin Socket", icon: Plug, category: "Sockets" },
+  { id: "3_pin_socket", label: "3-Pin Socket", icon: Plug2, category: "Sockets" },
+  { id: "5a_socket", label: "5A Socket", icon: Plug2, category: "Sockets" },
+  { id: "15a_socket", label: "15A Socket", icon: Plug2, category: "Sockets" },
+  { id: "universal_socket", label: "Universal Socket", icon: Plug2, category: "Sockets" },
+  { id: "usb_charging_socket", label: "USB Charging Socket", icon: Usb, category: "Sockets" },
+  { id: "usb_c_charging_socket", label: "USB-C Charging Socket", icon: Usb, category: "Sockets" },
+  { id: "power_socket_switch", label: "Power Socket with Switch", icon: Zap, category: "Sockets" },
+  { id: "shaver_socket", label: "Shaver Socket", icon: Plug, category: "Sockets" },
+
+  // Smart & Sensors
+  { id: "smart_wifi_switch", label: "Smart WiFi Switch", icon: Wifi, category: "Smart" },
+  { id: "zigbee_smart_switch", label: "Zigbee Smart Switch", icon: Cpu, category: "Smart" },
+  { id: "bluetooth_smart_switch", label: "Bluetooth Smart Switch", icon: Bluetooth, category: "Smart" },
+  { id: "touch_panel_switch", label: "Touch Panel Switch", icon: LayoutGrid, category: "Smart" },
+  { id: "motion_sensor_switch", label: "Motion Sensor Switch", icon: Activity, category: "Smart" },
+  { id: "light_sensor_switch", label: "Light Sensor Switch", icon: Eye, category: "Smart" },
+  { id: "scene_control_panel", label: "Scene Control Panel", icon: LayoutGrid, category: "Smart" },
+  { id: "smart_button", label: "Smart Button", icon: Smartphone, category: "Smart" },
+
+  // Protection
+  { id: "mcb", label: "MCB", icon: Shield, category: "Protection" },
+  { id: "rccb", label: "RCCB", icon: ShieldAlert, category: "Protection" },
+  { id: "elcb", label: "ELCB", icon: ShieldAlert, category: "Protection" },
+  { id: "rcbo", label: "RCBO", icon: ShieldCheck, category: "Protection" },
+  { id: "fuse_holder", icon: Zap, label: "Fuse Holder", category: "Protection" },
+
+  // Communication & Media
+  { id: "tv_socket", label: "TV Cable Socket", icon: Tv, category: "Media" },
+  { id: "telephone_socket", label: "Telephone Socket", icon: Phone, category: "Media" },
+  { id: "lan_socket", label: "Ethernet / LAN Socket", icon: Network, category: "Media" },
+  { id: "hdmi_socket", label: "HDMI Wall Socket", icon: Monitor, category: "Media" },
+  { id: "speaker_socket", label: "Speaker Wall Socket", icon: Speaker, category: "Media" },
+
+  // Indicators & Modules
+  { id: "led_indicator", label: "Light Indicator (LED)", icon: Lightbulb, category: "Indicators" },
+  { id: "neon_indicator", label: "Neon Indicator", icon: Lightbulb, category: "Indicators" },
+  { id: "night_lamp", label: "Night Lamp Module", icon: Moon, category: "Indicators" },
+  { id: "blank_plate", label: "Blank Plate / Dummy Plate", icon: Square, category: "Other" },
 ];
 
 // --- Components ---
 
-const Header = ({ title, backTo, actions }: { title: string; backTo?: string; actions?: React.ReactNode }) => (
-  <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      {backTo && (
-        <Link to={backTo} className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors">
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
-        </Link>
-      )}
-      <h1 className="text-lg font-semibold text-slate-900 truncate max-w-[200px]">{title}</h1>
-    </div>
-    <div className="flex items-center gap-2">
-      {actions}
-    </div>
-  </header>
-);
+const Header = ({ title, backTo, actions }: { title: string; backTo?: string; actions?: React.ReactNode }) => {
+  const navigate = useNavigate();
+  
+  return (
+    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        {backTo && (
+          <button 
+            onClick={() => backTo === "#" ? navigate(-1) : navigate(backTo)} 
+            className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </button>
+        )}
+        <h1 className="text-lg font-semibold text-slate-900 truncate max-w-[200px]">{title}</h1>
+      </div>
+      <div className="flex items-center gap-2">
+        {actions}
+      </div>
+    </header>
+  );
+};
 
 const Card = ({ children, className, onClick, ...props }: { children: React.ReactNode; className?: string; onClick?: () => void; [key: string]: any }) => (
   <motion.div
@@ -124,6 +216,82 @@ const Button = ({
 };
 
 // --- Views ---
+
+const StartScreen = () => {
+  const navigate = useNavigate();
+  
+  return (
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+      {/* Background Glow */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/20 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-600/10 blur-[120px] rounded-full" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 space-y-8"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-24 h-24 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20 rotate-12">
+            <Zap className="w-12 h-12 text-white fill-white" />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-4xl font-black text-white tracking-tighter">VoltMap</h1>
+            <p className="text-indigo-400 font-medium tracking-widest uppercase text-xs">Electrical Mapping Pro</p>
+          </div>
+        </div>
+
+        <div className="space-y-4 max-w-xs mx-auto">
+          <p className="text-slate-400 text-sm leading-relaxed">
+            Professional electrical room mapping with AI-powered component detection and instant PDF reporting.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 pt-4">
+          {[
+            { icon: Camera, text: "AI Component Detection" },
+            { icon: FileText, text: "Instant PDF Reports" },
+            { icon: LayoutGrid, text: "Hierarchical Mapping" }
+          ].map((feature, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 + (i * 0.1) }}
+              className="flex items-center gap-3 bg-white/5 border border-white/10 p-3 rounded-2xl backdrop-blur-sm"
+            >
+              <feature.icon className="w-5 h-5 text-indigo-400" />
+              <span className="text-white/80 text-sm font-medium">{feature.text}</span>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.8 }}
+          className="pt-8"
+        >
+          <Button 
+            size="lg" 
+            className="w-full h-16 text-lg font-bold rounded-2xl bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-600/20"
+            onClick={() => navigate("/buildings")}
+          >
+            Get Started
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+        </motion.div>
+      </motion.div>
+
+      <div className="absolute bottom-8 left-0 w-full text-center">
+        <p className="text-slate-600 text-[10px] uppercase tracking-[0.2em] font-bold">Version 2.0 • Powered by AI</p>
+      </div>
+    </div>
+  );
+};
 
 const BuildingList = () => {
   const [buildings, setBuildings] = useState<any[]>([]);
@@ -260,7 +428,7 @@ const FloorList = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header title={building?.name || "Floors"} backTo="/" actions={
+      <Header title={building?.name || "Floors"} backTo="/buildings" actions={
         <Button size="sm" onClick={() => setIsAdding(true)}><Plus className="w-4 h-4" /> Add Floor</Button>
       } />
       
@@ -333,6 +501,15 @@ const RoomList = () => {
   const [newRoom, setNewRoom] = useState({ name: "", type: "Bedroom", size: "" });
 
   useEffect(() => {
+    // Fetch floor to get building_id for back navigation
+    fetch(`/api/buildings`)
+      .then(res => res.json())
+      .then(buildings => {
+        // This is a bit inefficient but works for now to find the parent building
+        // A better API endpoint would be /api/floors/:id
+        // Let's assume we can find it or just go back to the previous page
+      });
+
     fetch(`/api/floors/${floorId}/rooms`)
       .then(res => res.json())
       .then(data => {
@@ -392,7 +569,7 @@ const RoomList = () => {
           board.components.map((comp: any) => [
             board.board_number,
             board.wall_position || "-",
-            comp.type.replace("_", " ").toUpperCase(),
+            (COMPONENT_TYPES.find(t => t.id === comp.type)?.label || comp.type).toUpperCase(),
             comp.count
           ])
         );
@@ -425,7 +602,7 @@ const RoomList = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header title="Rooms" backTo={`/buildings/1`} actions={
+      <Header title="Rooms" backTo="#" actions={
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={generateFloorReport} isLoading={isLoading}>
             <FileText className="w-4 h-4" /> PDF
@@ -528,6 +705,7 @@ const RoomDetail = () => {
   const [isAIActive, setIsAIActive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [newBoard, setNewBoard] = useState<any>({
@@ -649,7 +827,7 @@ const RoomDetail = () => {
       board.components.map((comp: any) => [
         board.board_number,
         board.wall_position || "-",
-        comp.type.replace("_", " ").toUpperCase(),
+        (COMPONENT_TYPES.find(t => t.id === comp.type)?.label || comp.type).toUpperCase(),
         comp.count
       ])
     );
@@ -665,7 +843,7 @@ const RoomDetail = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
-      <Header title="Room Details" backTo={`/floors/1`} actions={
+      <Header title="Room Details" backTo="#" actions={
         <Button size="sm" variant="outline" onClick={generateReport}><FileText className="w-4 h-4" /> PDF</Button>
       } />
 
@@ -702,11 +880,12 @@ const RoomDetail = () => {
                 
                 <div className="grid grid-cols-2 gap-2">
                   {b.components.map((comp: any, idx: number) => {
-                    const TypeIcon = COMPONENT_TYPES.find(t => t.id === comp.type)?.icon || Power;
+                    const typeInfo = COMPONENT_TYPES.find(t => t.id === comp.type);
+                    const TypeIcon = typeInfo?.icon || Power;
                     return (
                       <div key={idx} className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
                         <TypeIcon className="w-4 h-4 text-indigo-600" />
-                        <span className="text-xs font-medium text-slate-700 truncate">{comp.type.replace("_", " ")}</span>
+                        <span className="text-[10px] font-medium text-slate-700 truncate">{typeInfo?.label || comp.type}</span>
                         <span className="ml-auto bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[10px] font-bold">{comp.count}</span>
                       </div>
                     );
@@ -761,20 +940,31 @@ const RoomDetail = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 uppercase mb-2">Components</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {COMPONENT_TYPES.map(type => {
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-medium text-slate-500 uppercase">Components</label>
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        placeholder="Search..." 
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="text-[10px] px-2 py-1 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 w-24"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 max-h-[250px] overflow-y-auto p-1 border border-slate-100 rounded-xl">
+                    {COMPONENT_TYPES.filter(t => t.label.toLowerCase().includes(searchTerm.toLowerCase())).map(type => {
                       const existing = newBoard.components.find((c: any) => c.type === type.id);
                       return (
                         <div key={type.id} className={cn(
                           "flex items-center justify-between p-2 rounded-xl border transition-all",
                           existing ? "bg-indigo-50 border-indigo-200" : "bg-white border-slate-200"
                         )}>
-                          <div className="flex items-center gap-2">
-                            <type.icon className={cn("w-4 h-4", existing ? "text-indigo-600" : "text-slate-400")} />
-                            <span className="text-xs font-medium">{type.label}</span>
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <type.icon className={cn("w-4 h-4 flex-shrink-0", existing ? "text-indigo-600" : "text-slate-400")} />
+                            <span className="text-[10px] font-medium truncate">{type.label}</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             {existing && (
                               <button 
                                 onClick={() => {
@@ -788,7 +978,7 @@ const RoomDetail = () => {
                                 className="w-5 h-5 flex items-center justify-center bg-white border border-indigo-200 rounded-md text-indigo-600"
                               >-</button>
                             )}
-                            <span className="text-xs font-bold w-4 text-center">{existing?.count || 0}</span>
+                            {existing && <span className="text-[10px] font-bold w-3 text-center">{existing.count}</span>}
                             <button 
                               onClick={() => {
                                 if (existing) {
@@ -797,8 +987,13 @@ const RoomDetail = () => {
                                   setNewBoard({ ...newBoard, components: [...newBoard.components, { type: type.id, count: 1 }] });
                                 }
                               }}
-                              className="w-5 h-5 flex items-center justify-center bg-indigo-600 rounded-md text-white"
-                            >+</button>
+                              className={cn(
+                                "w-5 h-5 flex items-center justify-center rounded-md text-white",
+                                existing ? "bg-indigo-600" : "bg-slate-200 text-slate-600"
+                              )}
+                            >
+                              {existing ? "+" : "+"}
+                            </button>
                           </div>
                         </div>
                       );
@@ -908,7 +1103,8 @@ export default function App() {
     <Router>
       <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl relative overflow-x-hidden">
         <Routes>
-          <Route path="/" element={<BuildingList />} />
+          <Route path="/" element={<StartScreen />} />
+          <Route path="/buildings" element={<BuildingList />} />
           <Route path="/buildings/:buildingId" element={<FloorList />} />
           <Route path="/floors/:floorId" element={<RoomList />} />
           <Route path="/rooms/:roomId" element={<RoomDetail />} />
