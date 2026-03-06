@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal, TextInput, ActivityIndicator, Alert, Dimensions } from 'react-native';
-import { ArrowLeft, Plus, Camera, FileText, X, Cpu, Zap, ToggleRight, Plug2, Fan, Snowflake, Smartphone, Sun, Search, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft, Plus, Camera, FileText, X, Cpu, Zap, ToggleRight, Plug2, Fan, Snowflake, Smartphone, Sun, Search, CheckCircle2, Edit2, Trash2 } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,6 +21,7 @@ export const RoomDetail = ({ route, navigation }) => {
   const { roomId, roomName } = route.params;
   const [boards, setBoards] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingBoard, setEditingBoard] = useState(null);
   const [isAIActive, setIsAIActive] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,17 +48,63 @@ export const RoomDetail = ({ route, navigation }) => {
       setIsDetecting(false);
       setIsAIActive(false);
       setIsAdding(true);
+      setEditingBoard(null);
     }, 3000);
   };
 
-  const handleAddBoard = () => {
+  const handleSaveBoard = () => {
     if (!newBoard.board_number) {
       Alert.alert("Error", "Please enter a board number");
       return;
     }
-    setBoards([...boards, { ...newBoard, id: Date.now() }]);
+    
+    if (editingBoard) {
+      setBoards(boards.map(b => b.id === editingBoard.id ? { ...newBoard, id: b.id } : b));
+    } else {
+      setBoards([...boards, { ...newBoard, id: Date.now() }]);
+    }
+    
     setIsAdding(false);
+    setEditingBoard(null);
     setNewBoard({ board_number: '', wall_position: 'North', components: [] });
+  };
+
+  const handleDeleteBoard = (id) => {
+    Alert.alert(
+      "Delete Board",
+      "Are you sure you want to delete this board?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: () => setBoards(boards.filter(b => b.id !== id))
+        }
+      ]
+    );
+  };
+
+  const updateComponentCount = (typeId, delta) => {
+    const existing = newBoard.components.find(c => c.type === typeId);
+    if (existing) {
+      const newCount = existing.count + delta;
+      if (newCount <= 0) {
+        setNewBoard({
+          ...newBoard,
+          components: newBoard.components.filter(c => c.type !== typeId)
+        });
+      } else {
+        setNewBoard({
+          ...newBoard,
+          components: newBoard.components.map(c => c.type === typeId ? { ...c, count: newCount } : c)
+        });
+      }
+    } else if (delta > 0) {
+      setNewBoard({
+        ...newBoard,
+        components: [...newBoard.components, { type: typeId, count: 1 }]
+      });
+    }
   };
 
   return (
@@ -79,7 +126,14 @@ export const RoomDetail = ({ route, navigation }) => {
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         {/* Action Buttons */}
         <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.primaryAction} onPress={() => setIsAdding(true)}>
+          <TouchableOpacity 
+            style={styles.primaryAction} 
+            onPress={() => {
+              setEditingBoard(null);
+              setNewBoard({ board_number: '', wall_position: 'North', components: [] });
+              setIsAdding(true);
+            }}
+          >
             <Plus color="#fff" size={20} />
             <Text style={styles.primaryActionText}>Manual Add</Text>
           </TouchableOpacity>
@@ -105,9 +159,24 @@ export const RoomDetail = ({ route, navigation }) => {
                   <Text style={styles.boardNumber}>Board {board.board_number}</Text>
                   <Text style={styles.boardWall}>{board.wall_position} Wall</Text>
                 </View>
-                <TouchableOpacity>
-                  <X color="#94a3b8" size={20} />
-                </TouchableOpacity>
+                <View style={styles.boardActions}>
+                  <TouchableOpacity 
+                    onPress={() => {
+                      setEditingBoard(board);
+                      setNewBoard({ ...board });
+                      setIsAdding(true);
+                    }}
+                    style={styles.boardActionButton}
+                  >
+                    <Edit2 color="#6366f1" size={18} />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => handleDeleteBoard(board.id)}
+                    style={[styles.boardActionButton, styles.boardDeleteButton]}
+                  >
+                    <Trash2 color="#ef4444" size={18} />
+                  </TouchableOpacity>
+                </View>
               </View>
               <View style={styles.componentGrid}>
                 {board.components.map((comp, idx) => {
@@ -132,7 +201,7 @@ export const RoomDetail = ({ route, navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Board</Text>
+              <Text style={styles.modalTitle}>{editingBoard ? 'Edit Board' : 'Add Board'}</Text>
               <TouchableOpacity onPress={() => setIsAdding(false)}>
                 <X color="#0f172a" size={24} />
               </TouchableOpacity>
@@ -150,8 +219,22 @@ export const RoomDetail = ({ route, navigation }) => {
               </View>
               <View style={styles.inputHalf}>
                 <Text style={styles.label}>Wall</Text>
-                <View style={styles.pickerContainer}>
-                  <Text style={styles.pickerText}>{newBoard.wall_position}</Text>
+                <View style={styles.wallPicker}>
+                  {['North', 'South', 'East', 'West'].map(pos => (
+                    <TouchableOpacity 
+                      key={pos}
+                      onPress={() => setNewBoard({...newBoard, wall_position: pos})}
+                      style={[
+                        styles.wallChip,
+                        newBoard.wall_position === pos && styles.wallChipActive
+                      ]}
+                    >
+                      <Text style={[
+                        styles.wallChipText,
+                        newBoard.wall_position === pos && styles.wallChipTextActive
+                      ]}>{pos[0]}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
             </View>
@@ -175,39 +258,34 @@ export const RoomDetail = ({ route, navigation }) => {
                   {COMPONENT_TYPES.filter(t => t.label.toLowerCase().includes(searchTerm.toLowerCase())).map(type => {
                     const existing = newBoard.components.find(c => c.type === type.id);
                     return (
-                      <TouchableOpacity 
-                        key={type.id} 
-                        style={[styles.typeItem, existing && styles.typeItemActive]}
-                        onPress={() => {
-                          if (existing) {
-                            setNewBoard({
-                              ...newBoard,
-                              components: newBoard.components.map(c => c.type === type.id ? {...c, count: c.count + 1} : c)
-                            });
-                          } else {
-                            setNewBoard({
-                              ...newBoard,
-                              components: [...newBoard.components, { type: type.id, count: 1 }]
-                            });
-                          }
-                        }}
-                      >
+                      <View key={type.id} style={[styles.typeItem, existing && styles.typeItemActive]}>
                         <type.icon color={existing ? "#6366f1" : "#94a3b8"} size={18} />
                         <Text style={[styles.typeLabel, existing && styles.typeLabelActive]} numberOfLines={1}>{type.label}</Text>
-                        {existing && (
-                          <View style={styles.countBadge}>
-                            <Text style={styles.countText}>{existing.count}</Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
+                        
+                        <View style={styles.counter}>
+                          <TouchableOpacity 
+                            onPress={() => updateComponentCount(type.id, -1)}
+                            style={styles.counterBtn}
+                          >
+                            <Text style={styles.counterBtnText}>-</Text>
+                          </TouchableOpacity>
+                          <Text style={styles.counterVal}>{existing ? existing.count : 0}</Text>
+                          <TouchableOpacity 
+                            onPress={() => updateComponentCount(type.id, 1)}
+                            style={styles.counterBtn}
+                          >
+                            <Text style={styles.counterBtnText}>+</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     );
                   })}
                 </View>
               </ScrollView>
             </View>
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleAddBoard}>
-              <Text style={styles.saveButtonText}>Save Board</Text>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSaveBoard}>
+              <Text style={styles.saveButtonText}>{editingBoard ? 'Update Board' : 'Save Board'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -371,6 +449,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
   },
+  boardActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  boardActionButton: {
+    padding: 4,
+  },
+  boardDeleteButton: {
+    opacity: 0.8,
+  },
   boardNumber: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -458,6 +546,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
+  wallPicker: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  wallChip: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  wallChipActive: {
+    backgroundColor: '#eef2ff',
+    borderColor: '#6366f1',
+  },
+  wallChipText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#64748b',
+  },
+  wallChipTextActive: {
+    color: '#6366f1',
+  },
   pickerContainer: {
     backgroundColor: '#f8fafc',
     height: 50,
@@ -509,24 +623,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 12,
+    padding: 10,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    gap: 8,
+    gap: 6,
   },
   typeItemActive: {
     backgroundColor: '#eef2ff',
     borderColor: '#c7d2fe',
   },
   typeLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#475569',
     flex: 1,
   },
   typeLabelActive: {
     color: '#6366f1',
     fontWeight: 'bold',
+  },
+  counter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  counterBtn: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  counterBtnText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#475569',
+  },
+  counterVal: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#0f172a',
+    minWidth: 12,
+    textAlign: 'center',
   },
   countBadge: {
     backgroundColor: '#6366f1',

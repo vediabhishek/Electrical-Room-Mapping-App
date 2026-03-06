@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
-import { ArrowLeft, Layers, ChevronRight, Plus, FileText } from 'lucide-react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
+import { ArrowLeft, Layers, ChevronRight, Plus, FileText, Edit2, Trash2, X } from 'lucide-react-native';
 
 export const FloorList = ({ route, navigation }) => {
   const { buildingId, buildingName } = route.params;
   const [floors, setFloors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingFloor, setEditingFloor] = useState(null);
+  const [newName, setNewName] = useState('');
 
   useEffect(() => {
     fetchFloors();
@@ -28,6 +31,35 @@ export const FloorList = ({ route, navigation }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSave = () => {
+    if (!newName.trim()) return;
+    
+    if (editingFloor) {
+      setFloors(floors.map(f => f.id === editingFloor.id ? { ...f, name: newName } : f));
+    } else {
+      setFloors([...floors, { id: Date.now(), name: newName, room_count: 0 }]);
+    }
+    
+    setModalVisible(false);
+    setEditingFloor(null);
+    setNewName('');
+  };
+
+  const handleDelete = (id) => {
+    Alert.alert(
+      "Delete Floor",
+      "Are you sure you want to delete this floor? All rooms will be lost.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: () => setFloors(floors.filter(f => f.id !== id))
+        }
+      ]
+    );
   };
 
   return (
@@ -53,26 +85,86 @@ export const FloorList = ({ route, navigation }) => {
           keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={styles.card}
-              onPress={() => navigation.navigate('Rooms', { floorId: item.id, floorName: item.name })}
-            >
-              <View style={styles.cardIcon}>
-                <Layers color="#6366f1" size={24} />
+            <View style={styles.cardContainer}>
+              <TouchableOpacity 
+                style={styles.card}
+                onPress={() => navigation.navigate('Rooms', { floorId: item.id, floorName: item.name })}
+              >
+                <View style={styles.cardIcon}>
+                  <Layers color="#6366f1" size={24} />
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>{item.name}</Text>
+                  <Text style={styles.cardSubtitle}>{item.room_count} Rooms Mapped</Text>
+                </View>
+                <ChevronRight color="#cbd5e1" size={20} />
+              </TouchableOpacity>
+              
+              <View style={styles.cardActions}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setEditingFloor(item);
+                    setNewName(item.name);
+                    setModalVisible(true);
+                  }}
+                  style={styles.actionButton}
+                >
+                  <Edit2 size={16} color="#6366f1" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => handleDelete(item.id)}
+                  style={[styles.actionButton, styles.deleteButton]}
+                >
+                  <Trash2 size={16} color="#ef4444" />
+                </TouchableOpacity>
               </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardSubtitle}>{item.room_count} Rooms Mapped</Text>
-              </View>
-              <ChevronRight color="#cbd5e1" size={20} />
-            </TouchableOpacity>
+            </View>
           )}
         />
       )}
 
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => {
+          setEditingFloor(null);
+          setNewName('');
+          setModalVisible(true);
+        }}
+      >
         <Plus color="#fff" size={24} />
       </TouchableOpacity>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{editingFloor ? 'Edit Floor' : 'New Floor'}</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <X color="#64748b" size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.form}>
+              <Text style={styles.label}>Floor Name/Number</Text>
+              <TextInput 
+                style={styles.input}
+                value={newName}
+                onChangeText={setNewName}
+                placeholder="e.g. Ground Floor"
+              />
+
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Text style={styles.saveButtonText}>{editingFloor ? 'Update Floor' : 'Create Floor'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -119,13 +211,15 @@ const styles = StyleSheet.create({
   list: {
     padding: 24,
   },
+  cardContainer: {
+    marginBottom: 16,
+  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 16,
     borderRadius: 20,
-    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#e2e8f0',
     shadowColor: '#000',
@@ -133,6 +227,84 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: -10,
+    marginRight: 16,
+    gap: 8,
+  },
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  deleteButton: {
+    borderColor: '#fee2e2',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#0f172a',
+  },
+  form: {
+    gap: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+    marginBottom: -8,
+  },
+  input: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 16,
+    color: '#0f172a',
+  },
+  saveButton: {
+    backgroundColor: '#6366f1',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   cardIcon: {
     width: 48,
