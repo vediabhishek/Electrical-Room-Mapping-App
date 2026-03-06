@@ -69,6 +69,17 @@ async function startServer() {
     res.json({ id: result.lastInsertRowid });
   });
 
+  app.put("/api/buildings/:id", (req, res) => {
+    const { name } = req.body;
+    db.prepare("UPDATE buildings SET name = ? WHERE id = ?").run(name, req.params.id);
+    res.json({ success: true });
+  });
+
+  app.delete("/api/buildings/:id", (req, res) => {
+    db.prepare("DELETE FROM buildings WHERE id = ?").run(req.params.id);
+    res.json({ success: true });
+  });
+
   app.get("/api/buildings/:id/floors", (req, res) => {
     const floors = db.prepare("SELECT * FROM floors WHERE building_id = ?").all(req.params.id);
     res.json(floors);
@@ -78,6 +89,17 @@ async function startServer() {
     const { name } = req.body;
     const result = db.prepare("INSERT INTO floors (building_id, name) VALUES (?, ?)").run(req.params.id, name);
     res.json({ id: result.lastInsertRowid });
+  });
+
+  app.put("/api/floors/:id", (req, res) => {
+    const { name } = req.body;
+    db.prepare("UPDATE floors SET name = ? WHERE id = ?").run(name, req.params.id);
+    res.json({ success: true });
+  });
+
+  app.delete("/api/floors/:id", (req, res) => {
+    db.prepare("DELETE FROM floors WHERE id = ?").run(req.params.id);
+    res.json({ success: true });
   });
 
   app.get("/api/floors/:id/rooms", (req, res) => {
@@ -90,6 +112,18 @@ async function startServer() {
     const result = db.prepare("INSERT INTO rooms (floor_id, name, type, size) VALUES (?, ?, ?, ?)")
       .run(req.params.id, name, type, size);
     res.json({ id: result.lastInsertRowid });
+  });
+
+  app.put("/api/rooms/:id", (req, res) => {
+    const { name, type, size } = req.body;
+    db.prepare("UPDATE rooms SET name = ?, type = ?, size = ? WHERE id = ?")
+      .run(name, type, size, req.params.id);
+    res.json({ success: true });
+  });
+
+  app.delete("/api/rooms/:id", (req, res) => {
+    db.prepare("DELETE FROM rooms WHERE id = ?").run(req.params.id);
+    res.json({ success: true });
   });
 
   app.get("/api/rooms/:id/boards", (req, res) => {
@@ -119,6 +153,26 @@ async function startServer() {
 
     const boardId = transaction();
     res.json({ id: boardId });
+  });
+
+  app.put("/api/boards/:id", (req, res) => {
+    const { board_number, wall_position, height, components } = req.body;
+    const transaction = db.transaction(() => {
+      db.prepare("UPDATE boards SET board_number = ?, wall_position = ?, height = ? WHERE id = ?")
+        .run(board_number, wall_position, height, req.params.id);
+      
+      db.prepare("DELETE FROM components WHERE board_id = ?").run(req.params.id);
+
+      if (components && Array.isArray(components)) {
+        const insertComp = db.prepare("INSERT INTO components (board_id, type, count) VALUES (?, ?, ?)");
+        for (const comp of components) {
+          insertComp.run(req.params.id, comp.type, comp.count);
+        }
+      }
+    });
+
+    transaction();
+    res.json({ success: true });
   });
 
   app.get("/api/floors/:id/report", (req, res) => {

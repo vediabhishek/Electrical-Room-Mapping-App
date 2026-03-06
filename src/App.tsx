@@ -10,6 +10,7 @@ import {
   Camera, 
   FileText, 
   Trash2, 
+  Edit2,
   ArrowLeft,
   Loader2,
   CheckCircle2,
@@ -296,6 +297,7 @@ const StartScreen = () => {
 const BuildingList = () => {
   const [buildings, setBuildings] = useState<any[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingBuilding, setEditingBuilding] = useState<any>(null);
   const [newName, setNewName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -322,6 +324,25 @@ const BuildingList = () => {
     setIsAdding(false);
   };
 
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim() || !editingBuilding) return;
+    await fetch(`/api/buildings/${editingBuilding.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName })
+    });
+    setBuildings(buildings.map(b => b.id === editingBuilding.id ? { ...b, name: newName } : b));
+    setNewName("");
+    setEditingBuilding(null);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this building? All floors and rooms will be removed.")) return;
+    await fetch(`/api/buildings/${id}`, { method: "DELETE" });
+    setBuildings(buildings.filter(b => b.id !== id));
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <Header title="VoltMap" actions={
@@ -338,26 +359,49 @@ const BuildingList = () => {
           </div>
         ) : (
           buildings.map(b => (
-            <Link key={b.id} to={`/buildings/${b.id}`}>
-              <Card className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
-                    <Building2 className="w-6 h-6" />
+            <div key={b.id} className="relative group">
+              <Link to={`/buildings/${b.id}`}>
+                <Card className="flex items-center justify-between mb-3 pr-12">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                      <Building2 className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900">{b.name}</h3>
+                      <p className="text-xs text-slate-500">{new Date(b.created_at).toLocaleDateString()}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">{b.name}</h3>
-                    <p className="text-xs text-slate-500">{new Date(b.created_at).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-slate-300" />
-              </Card>
-            </Link>
+                  <ChevronRight className="w-5 h-5 text-slate-300" />
+                </Card>
+              </Link>
+              <div className="absolute right-12 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setEditingBuilding(b);
+                    setNewName(b.name);
+                  }}
+                  className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 hover:border-indigo-200 shadow-sm"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDelete(b.id);
+                  }}
+                  className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-red-600 hover:border-red-200 shadow-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           ))
         )}
       </main>
 
       <AnimatePresence>
-        {isAdding && (
+        {(isAdding || editingBuilding) && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
             <motion.div 
               initial={{ y: "100%" }}
@@ -366,10 +410,10 @@ const BuildingList = () => {
               className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-slate-900">Add Building</h2>
-                <button onClick={() => setIsAdding(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+                <h2 className="text-xl font-bold text-slate-900">{editingBuilding ? "Edit Building" : "Add Building"}</h2>
+                <button onClick={() => { setIsAdding(false); setEditingBuilding(null); setNewName(""); }} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
               </div>
-              <form onSubmit={handleAdd} className="space-y-4">
+              <form onSubmit={editingBuilding ? handleUpdate : handleAdd} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Building Name</label>
                   <input 
@@ -381,7 +425,7 @@ const BuildingList = () => {
                     placeholder="e.g. Skyline Apartments"
                   />
                 </div>
-                <Button type="submit" className="w-full" size="lg">Create Building</Button>
+                <Button type="submit" className="w-full" size="lg">{editingBuilding ? "Update Building" : "Create Building"}</Button>
               </form>
             </motion.div>
           </div>
@@ -396,6 +440,7 @@ const FloorList = () => {
   const [floors, setFloors] = useState<any[]>([]);
   const [building, setBuilding] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingFloor, setEditingFloor] = useState<any>(null);
   const [newName, setNewName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -426,6 +471,25 @@ const FloorList = () => {
     setIsAdding(false);
   };
 
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim() || !editingFloor) return;
+    await fetch(`/api/floors/${editingFloor.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName })
+    });
+    setFloors(floors.map(f => f.id === editingFloor.id ? { ...f, name: newName } : f));
+    setNewName("");
+    setEditingFloor(null);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this floor? All rooms will be removed.")) return;
+    await fetch(`/api/floors/${id}`, { method: "DELETE" });
+    setFloors(floors.filter(f => f.id !== id));
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Header title={building?.name || "Floors"} backTo="/buildings" actions={
@@ -442,23 +506,46 @@ const FloorList = () => {
           </div>
         ) : (
           floors.map(f => (
-            <Link key={f.id} to={`/floors/${f.id}`}>
-              <Card className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-                    <Layers className="w-5 h-5" />
+            <div key={f.id} className="relative group">
+              <Link to={`/floors/${f.id}`}>
+                <Card className="flex items-center justify-between pr-12">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-medium text-slate-900">{f.name}</h3>
                   </div>
-                  <h3 className="font-medium text-slate-900">{f.name}</h3>
-                </div>
-                <ChevronRight className="w-5 h-5 text-slate-300" />
-              </Card>
-            </Link>
+                  <ChevronRight className="w-5 h-5 text-slate-300" />
+                </Card>
+              </Link>
+              <div className="absolute right-12 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setEditingFloor(f);
+                    setNewName(f.name);
+                  }}
+                  className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 hover:border-indigo-200 shadow-sm"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDelete(f.id);
+                  }}
+                  className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-red-600 hover:border-red-200 shadow-sm"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           ))
         )}
       </main>
 
       <AnimatePresence>
-        {isAdding && (
+        {(isAdding || editingFloor) && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
             <motion.div 
               initial={{ y: "100%" }}
@@ -467,10 +554,10 @@ const FloorList = () => {
               className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-slate-900">Add Floor</h2>
-                <button onClick={() => setIsAdding(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+                <h2 className="text-xl font-bold text-slate-900">{editingFloor ? "Edit Floor" : "Add Floor"}</h2>
+                <button onClick={() => { setIsAdding(false); setEditingFloor(null); setNewName(""); }} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
               </div>
-              <form onSubmit={handleAdd} className="space-y-4">
+              <form onSubmit={editingFloor ? handleUpdate : handleAdd} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Floor Name/Number</label>
                   <input 
@@ -482,7 +569,7 @@ const FloorList = () => {
                     placeholder="e.g. Ground Floor, 1st Floor"
                   />
                 </div>
-                <Button type="submit" className="w-full" size="lg">Add Floor</Button>
+                <Button type="submit" className="w-full" size="lg">{editingFloor ? "Update Floor" : "Add Floor"}</Button>
               </form>
             </motion.div>
           </div>
@@ -497,19 +584,11 @@ const RoomList = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [floor, setFloor] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [newRoom, setNewRoom] = useState({ name: "", type: "Bedroom", size: "" });
 
   useEffect(() => {
-    // Fetch floor to get building_id for back navigation
-    fetch(`/api/buildings`)
-      .then(res => res.json())
-      .then(buildings => {
-        // This is a bit inefficient but works for now to find the parent building
-        // A better API endpoint would be /api/floors/:id
-        // Let's assume we can find it or just go back to the previous page
-      });
-
     fetch(`/api/floors/${floorId}/rooms`)
       .then(res => res.json())
       .then(data => {
@@ -530,6 +609,25 @@ const RoomList = () => {
     setRooms([...rooms, { id: data.id, ...newRoom }]);
     setNewRoom({ name: "", type: "Bedroom", size: "" });
     setIsAdding(false);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoom.name.trim() || !editingRoom) return;
+    await fetch(`/api/rooms/${editingRoom.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newRoom)
+    });
+    setRooms(rooms.map(r => r.id === editingRoom.id ? { ...r, ...newRoom } : r));
+    setNewRoom({ name: "", type: "Bedroom", size: "" });
+    setEditingRoom(null);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this room? All electrical data will be lost.")) return;
+    await fetch(`/api/rooms/${id}`, { method: "DELETE" });
+    setRooms(rooms.filter(r => r.id !== id));
   };
 
   const generateFloorReport = async () => {
@@ -719,21 +817,44 @@ const RoomList = () => {
           </div>
         ) : (
           rooms.map(r => (
-            <Link key={r.id} to={`/rooms/${r.id}`}>
-              <Card className="h-full flex flex-col items-center justify-center text-center py-6">
-                <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-3">
-                  <DoorOpen className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-slate-900 text-sm">{r.name}</h3>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">{r.type}</p>
-              </Card>
-            </Link>
+            <div key={r.id} className="relative group">
+              <Link to={`/rooms/${r.id}`}>
+                <Card className="h-full flex flex-col items-center justify-center text-center py-6 pr-2">
+                  <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-3">
+                    <DoorOpen className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold text-slate-900 text-sm">{r.name}</h3>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">{r.type}</p>
+                </Card>
+              </Link>
+              <div className="absolute right-2 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setEditingRoom(r);
+                    setNewRoom({ name: r.name, type: r.type, size: r.size || "" });
+                  }}
+                  className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 hover:border-indigo-200 shadow-sm"
+                >
+                  <Edit2 className="w-3 h-3" />
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDelete(r.id);
+                  }}
+                  className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-red-600 hover:border-red-200 shadow-sm"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
           ))
         )}
       </main>
 
       <AnimatePresence>
-        {isAdding && (
+        {(isAdding || editingRoom) && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
             <motion.div 
               initial={{ y: "100%" }}
@@ -742,10 +863,10 @@ const RoomList = () => {
               className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-slate-900">Add Room</h2>
-                <button onClick={() => setIsAdding(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+                <h2 className="text-xl font-bold text-slate-900">{editingRoom ? "Edit Room" : "Add Room"}</h2>
+                <button onClick={() => { setIsAdding(false); setEditingRoom(null); setNewRoom({ name: "", type: "Bedroom", size: "" }); }} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
               </div>
-              <form onSubmit={handleAdd} className="space-y-4">
+              <form onSubmit={editingRoom ? handleUpdate : handleAdd} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Room Name</label>
                   <input 
@@ -783,7 +904,7 @@ const RoomList = () => {
                     placeholder="e.g. 12x15 ft"
                   />
                 </div>
-                <Button type="submit" className="w-full" size="lg">Add Room</Button>
+                <Button type="submit" className="w-full" size="lg">{editingRoom ? "Update Room" : "Add Room"}</Button>
               </form>
             </motion.div>
           </div>
@@ -798,6 +919,7 @@ const RoomDetail = () => {
   const [boards, setBoards] = useState<any[]>([]);
   const [room, setRoom] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingBoard, setEditingBoard] = useState<any>(null);
   const [isAIActive, setIsAIActive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDetecting, setIsDetecting] = useState(false);
@@ -833,7 +955,21 @@ const RoomDetail = () => {
     setIsAdding(false);
   };
 
+  const handleUpdateBoard = async () => {
+    if (!newBoard.board_number || !editingBoard) return;
+    await fetch(`/api/boards/${editingBoard.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newBoard)
+    });
+    setBoards(boards.map(b => b.id === editingBoard.id ? { ...b, ...newBoard } : b));
+    setNewBoard({ board_number: "", wall_position: "North", height: "", components: [] });
+    setEditingBoard(null);
+    setIsAdding(false);
+  };
+
   const deleteBoard = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this board?")) return;
     await fetch(`/api/boards/${id}`, { method: "DELETE" });
     setBoards(boards.filter(b => b.id !== id));
   };
@@ -1020,15 +1156,32 @@ const RoomDetail = () => {
             </div>
           ) : (
             boards.map(b => (
-              <Card key={b.id} className="relative overflow-hidden">
+              <Card key={b.id} className="relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900">Board {b.board_number}</h3>
                     <p className="text-xs text-slate-500">{b.wall_position} Wall • {b.height || "Standard"} Height</p>
                   </div>
-                  <button onClick={() => deleteBoard(b.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => {
+                        setEditingBoard(b);
+                        setNewBoard({
+                          board_number: b.board_number,
+                          wall_position: b.wall_position || "North",
+                          height: b.height || "",
+                          components: [...b.components]
+                        });
+                        setIsAdding(true);
+                      }}
+                      className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => deleteBoard(b.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2">
@@ -1050,7 +1203,7 @@ const RoomDetail = () => {
         </div>
       </main>
 
-      {/* Manual Add Modal */}
+      {/* Manual Add/Edit Modal */}
       <AnimatePresence>
         {isAdding && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
@@ -1061,8 +1214,8 @@ const RoomDetail = () => {
               className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-slate-900">Add Board</h2>
-                <button onClick={() => setIsAdding(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
+                <h2 className="text-xl font-bold text-slate-900">{editingBoard ? "Edit Board" : "Add Board"}</h2>
+                <button onClick={() => { setIsAdding(false); setEditingBoard(null); setNewBoard({ board_number: "", wall_position: "North", height: "", components: [] }); }} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
               </div>
               
               <div className="space-y-4">
@@ -1154,7 +1307,9 @@ const RoomDetail = () => {
                   </div>
                 </div>
 
-                <Button onClick={handleAddBoard} className="w-full" size="lg">Save Board</Button>
+                <Button onClick={editingBoard ? handleUpdateBoard : handleAddBoard} className="w-full" size="lg">
+                  {editingBoard ? "Update Board" : "Save Board"}
+                </Button>
               </div>
             </motion.div>
           </div>
