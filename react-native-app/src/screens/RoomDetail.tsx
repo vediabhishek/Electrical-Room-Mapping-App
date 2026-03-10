@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Modal, TextInput, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Plus, Camera, FileText, X, Cpu, Zap, ToggleRight, Plug2, Fan, Snowflake, Smartphone, Sun, Search, CheckCircle2, Edit2, Trash2 } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -32,10 +33,22 @@ export const RoomDetail = ({ route, navigation }) => {
   });
 
   useEffect(() => {
-    fetch(`https://ais-dev-meuehu4hqz4z4zkwipb2y3-586792953856.asia-southeast1.run.app/api/rooms/${roomId}/boards`)
-      .then(res => res.json())
-      .then(data => setBoards(data))
-      .catch(err => console.error("Fetch boards error:", err));
+    const fetchBoards = async () => {
+      try {
+        const response = await fetch(`https://ais-dev-meuehu4hqz4z4zkwipb2y3-586792953856.asia-southeast1.run.app/api/rooms/${roomId}/boards`);
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Fetch boards error:', response.status, text);
+          throw new Error(`Server error: ${response.status}`);
+        }
+        const data = await response.json();
+        setBoards(data);
+      } catch (err) {
+        console.error("Fetch boards error:", err);
+        Alert.alert('Error', 'Failed to load boards');
+      }
+    };
+    fetchBoards();
   }, [roomId]);
 
   // AI Detection

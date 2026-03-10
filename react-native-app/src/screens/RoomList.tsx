@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator, Modal, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Modal, TextInput, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, DoorOpen, ChevronRight, Plus, FileText, LayoutGrid, Edit2, Trash2, X } from 'lucide-react-native';
 
 export const RoomList = ({ route, navigation }) => {
@@ -20,10 +21,16 @@ export const RoomList = ({ route, navigation }) => {
   const fetchRooms = async () => {
     try {
       const response = await fetch(`https://ais-dev-meuehu4hqz4z4zkwipb2y3-586792953856.asia-southeast1.run.app/api/floors/${floorId}/rooms`);
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Fetch rooms error:', response.status, text);
+        throw new Error(`Server error: ${response.status}`);
+      }
       const data = await response.json();
       setRooms(data);
     } catch (error) {
       console.error(error);
+      Alert.alert('Error', 'Failed to load rooms');
     } finally {
       setLoading(false);
     }

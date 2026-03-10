@@ -14,6 +14,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS buildings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
+    address TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -59,19 +60,23 @@ async function startServer() {
 
   // API Routes
   app.get("/api/buildings", (req, res) => {
-    const buildings = db.prepare("SELECT * FROM buildings ORDER BY created_at DESC").all();
+    const buildings = db.prepare(`
+      SELECT b.*, (SELECT COUNT(*) FROM floors f WHERE f.building_id = b.id) as floor_count 
+      FROM buildings b 
+      ORDER BY b.created_at DESC
+    `).all();
     res.json(buildings);
   });
 
   app.post("/api/buildings", (req, res) => {
-    const { name } = req.body;
-    const result = db.prepare("INSERT INTO buildings (name) VALUES (?)").run(name);
+    const { name, address } = req.body;
+    const result = db.prepare("INSERT INTO buildings (name, address) VALUES (?, ?)").run(name, address || "");
     res.json({ id: result.lastInsertRowid });
   });
 
   app.put("/api/buildings/:id", (req, res) => {
-    const { name } = req.body;
-    db.prepare("UPDATE buildings SET name = ? WHERE id = ?").run(name, req.params.id);
+    const { name, address } = req.body;
+    db.prepare("UPDATE buildings SET name = ?, address = ? WHERE id = ?").run(name, address, req.params.id);
     res.json({ success: true });
   });
 
@@ -81,7 +86,11 @@ async function startServer() {
   });
 
   app.get("/api/buildings/:id/floors", (req, res) => {
-    const floors = db.prepare("SELECT * FROM floors WHERE building_id = ?").all(req.params.id);
+    const floors = db.prepare(`
+      SELECT f.*, (SELECT COUNT(*) FROM rooms r WHERE r.floor_id = f.id) as room_count 
+      FROM floors f 
+      WHERE f.building_id = ?
+    `).all(req.params.id);
     res.json(floors);
   });
 
@@ -103,7 +112,11 @@ async function startServer() {
   });
 
   app.get("/api/floors/:id/rooms", (req, res) => {
-    const rooms = db.prepare("SELECT * FROM rooms WHERE floor_id = ?").all(req.params.id);
+    const rooms = db.prepare(`
+      SELECT r.*, (SELECT COUNT(*) FROM boards b WHERE b.room_id = r.id) as board_count 
+      FROM rooms r 
+      WHERE r.floor_id = ?
+    `).all(req.params.id);
     res.json(rooms);
   });
 

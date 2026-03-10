@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, TextInput, ActivityIndicator, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Building2, Plus, ChevronRight, Search, MapPin, Edit2, Trash2, X } from 'lucide-react-native';
 
 export const BuildingList = ({ navigation }) => {
@@ -18,10 +19,16 @@ export const BuildingList = ({ navigation }) => {
   const fetchBuildings = async () => {
     try {
       const response = await fetch('https://ais-dev-meuehu4hqz4z4zkwipb2y3-586792953856.asia-southeast1.run.app/api/buildings');
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Fetch buildings error:', response.status, text);
+        throw new Error(`Server error: ${response.status}`);
+      }
       const data = await response.json();
       setBuildings(data);
     } catch (error) {
       console.error(error);
+      Alert.alert('Error', 'Failed to load buildings');
     } finally {
       setLoading(false);
     }

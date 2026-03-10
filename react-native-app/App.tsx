@@ -1,5 +1,6 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StartScreen } from './src/screens/StartScreen';
@@ -12,9 +13,10 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Stack.Navigator 
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator 
         initialRouteName="Start"
         screenOptions={{
           headerShown: false,
@@ -27,6 +29,7 @@ export default function App() {
         <Stack.Screen name="Rooms" component={RoomList} />
         <Stack.Screen name="RoomDetail" component={RoomDetail} />
       </Stack.Navigator>
-    </NavigationContainer>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

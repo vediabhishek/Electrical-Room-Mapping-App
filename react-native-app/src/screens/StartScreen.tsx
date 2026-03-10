@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ImageBackground, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Zap, Building2, FileText, Cpu, ChevronRight } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
