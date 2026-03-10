@@ -1,0 +1,5 @@
+{
+  "name": "VoltMap: Electrical Room Mapping",
+  "description": "A professional tool for mapping electrical boards and components in buildings with AI-powered detection.",
+  "requestFramePermissions": ["camera"]
+}
